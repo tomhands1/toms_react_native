@@ -19,7 +19,6 @@ const appRouter = (app) => {
 
         const newOrder = order(accountNumber, price, quantity, undefined, action);
         matcher.match(newOrder);
-
         res.status(201).send(newOrder);
     });
 

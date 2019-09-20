@@ -1,24 +1,50 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import { createStackNavigator } from 'react-navigation-stack';
+import createSagaMiddleware from 'redux-saga';
 
-import Counter from './components/Counter';
+import OrderForm from './components/OrderForm';
+import PrivateOrderbook from './components/PrivateOrderbook';
+import HomeScreen from './components/HomeScreen';
+import rootReducer from './reducers/rootReducer';
+import { createAppContainer } from 'react-navigation';
+import rootSaga from './sagas/Orders';
+
+const sagaMiddleware = createSagaMiddleware();
+
+const store = createStore(rootReducer, applyMiddleware(sagaMiddleware));
+sagaMiddleware.run(rootSaga);
+
+const RootStack = createStackNavigator({
+    HomeScreen: {
+        screen: HomeScreen,
+        navigationOptions: ({ navigation }) => ({
+            title: 'Mobile Bitcoin Trader'
+        })
+    },
+    OrderForm: {
+        screen: OrderForm,
+        navigationOptions: ({ navigation }) => ({
+            title: 'Place Order Here'
+        })
+    },
+    PrivateOrderbook: {
+        screen: PrivateOrderbook,
+        navigationOptions: ({ navigation }) => ({
+            title: 'My Orderbook'
+        })
+    },
+});
+
+const Navigation = createAppContainer(RootStack);
 
 const App = () => {
     return (
-        <View style={styles.body}>
-            <Counter/>
-        </View>
+        <Provider store={store}>
+            <Navigation />
+        </Provider>
     );
 };
-
-
-const styles = StyleSheet.create({
-    body: {
-        flex: 1,
-        backgroundColor: 'grey',
-        justifyContent: "center",
-        alignItems: "center",
-    }
-});
 
 export default App;

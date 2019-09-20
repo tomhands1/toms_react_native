@@ -14,4 +14,4 @@ app.use((req, res, next) => {
 
 routes(app);
 
-const server = app.listen(3000, () => console.log('app running on port.', server.address().port));
+const server = app.listen(3000, () => console.log('App running on port', server.address().port));
