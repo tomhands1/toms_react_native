@@ -6,7 +6,6 @@ import * as api from '../api/Orders';
 function* fetchAllOrders() {
     try {
         const orders = yield call(api.fetchAllOrders);
-        console.log(orders);
         yield put(actions.fetchOrdersSuccess(orders));
     }
     catch (error) {

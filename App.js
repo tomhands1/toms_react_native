@@ -6,7 +6,9 @@ import createSagaMiddleware from 'redux-saga';
 
 import OrderForm from './components/OrderForm';
 import PrivateOrderbook from './components/PrivateOrderbook';
+import TradeHistory from './components/TradeHistory';
 import HomeScreen from './components/HomeScreen';
+
 import rootReducer from './reducers/rootReducer';
 import { createAppContainer } from 'react-navigation';
 import rootSaga from './sagas/Orders';
@@ -33,6 +35,12 @@ const RootStack = createStackNavigator({
         screen: PrivateOrderbook,
         navigationOptions: ({ navigation }) => ({
             title: 'My Orderbook'
+        })
+    },
+    TradeHistory: {
+        screen: TradeHistory,
+        navigationOptions: ({ navigation }) => ({
+            title: 'Trade History'
         })
     },
 });

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { connect } from 'react-redux';
+import { getAllOrders } from '../selectors/Orders';
 
 const PrivateOrderbook = ({ myOrders }) => {
     const buyOrders = useMemo(() => myOrders.buyOrders, [myOrders]);
@@ -13,7 +14,7 @@ const PrivateOrderbook = ({ myOrders }) => {
 };
 
 const mapStateToProps = state => ({
-    myOrders: state.order.orders
+    myOrders: getAllOrders(state)
 });
 
 

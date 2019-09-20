@@ -18,8 +18,12 @@ const HomeScreen = ({ accountNumber, changeAccount, navigation, fetchOrders }) =
                 onPress={() => navigate('OrderForm')}
             />
             <Button
-                title="My Trades"
+                title="View My Orders"
                 onPress={() => navigate('PrivateOrderbook')}
+            />
+            <Button
+                title="Trade History"
+                onPress={() => navigate('TradeHistory')}
             />
             <Picker selectedValue={account} onValueChange={value => setAccount(value)} >
                 <Picker.Item label="1" value="1" />
