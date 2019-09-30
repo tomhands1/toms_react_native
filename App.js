@@ -1,24 +1,13 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { Provider } from 'react-redux';
 
-import Counter from './components/Counter';
+import HomeScreen from './components/HomeScreen';
+import configureStore from './configureStore';
 
-const App = () => {
-    return (
-        <View style={styles.body}>
-            <Counter/>
-        </View>
-    );
-};
-
-
-const styles = StyleSheet.create({
-    body: {
-        flex: 1,
-        backgroundColor: 'grey',
-        justifyContent: "center",
-        alignItems: "center",
-    }
-});
+const App = () => (
+    <Provider store={configureStore}>
+        <HomeScreen />
+    </Provider>
+);
 
 export default App;
