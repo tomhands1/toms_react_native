@@ -3,9 +3,11 @@ import fp from 'lodash/fp';
 
 const INITIAL_STATE = {
     orders: {},
+    depth: {},
     fetching: false,
     fetchingError: false,
-    fetchingAll: false
+    fetchingAll: false,
+    aggregation: 5
 };
 
 export default (state = INITIAL_STATE, action) => {
@@ -21,16 +23,10 @@ export default (state = INITIAL_STATE, action) => {
         case actions.ADD_ORDER_STARTED:
             return fp.set('fetching', true)(state);
         case actions.ADD_ORDER_SUCCESS:
-            const isBuy = action.order.action === 'Buy';
-            return isBuy ? {
-                ...state,
-                fetching: false,
-                ...state.orders.buyOrders.push(action.order)
-            } : {
-                    ...state,
-                    fetching: false,
-                    ...state.orders.sellOrders.push(action.order)
-                };
+            return fp.flow(
+                fp.set('fetching', false),
+                fp.set('orders', action.orders),
+            )(state);
         case actions.ADD_ORDER_FAILURE:
         case actions.FETCH_ORDERS_ERROR:
             return {
@@ -39,6 +35,12 @@ export default (state = INITIAL_STATE, action) => {
                 fetchingAll: false,
                 fetchingError: action.message,
             };
+        case actions.UPDATE_AGGREGATION:
+            return fp.set('aggregation', action.aggregation)(state);
+        case actions.UPDATE_DEPTH:
+            return fp.set('depth', action.depth)(state);
+        case actions.UPDATE_DEPTH_ERROR:
+            return fp.set('fetchingError', action.message)(state);
         default:
             return state;
     }

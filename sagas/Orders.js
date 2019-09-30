@@ -1,4 +1,4 @@
-import { put, takeEvery, all, call } from 'redux-saga/effects';
+import { put, takeEvery, takeLatest, all, call } from 'redux-saga/effects';
 
 import * as actions from '../actions/Orders';
 import * as api from '../api/Orders';
@@ -15,11 +15,21 @@ function* fetchAllOrders() {
 
 function* submitNewOrder(action) {
     try {
-        const newOrder = yield call(api.submitNewOrder, action.order);
-        yield put(actions.addOrderSuccess(newOrder));
+        const orders = yield call(api.submitNewOrder, action.order);
+        yield put(actions.addOrderSuccess(orders));
     }
     catch (error) {
         yield put(actions.addOrderFailure(error));
+    }
+}
+
+function* fetchDepth({ aggregation }) {
+    try {
+        const depth = yield call(api.fetchDepth, aggregation);
+        yield put(actions.updateDepth(depth));
+    }
+    catch (error) {
+        yield put(actions.updateDepthError(error));
     }
 }
 
@@ -32,6 +42,10 @@ export default function* rootSaga() {
         yield takeEvery(
             actions.FETCH_ORDERS_STARTED,
             fetchAllOrders,
+        ),
+        yield takeLatest(
+            actions.UPDATE_AGGREGATION,
+            fetchDepth,
         )
     ]);
 }

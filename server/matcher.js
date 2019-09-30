@@ -1,7 +1,8 @@
 import fp from 'lodash';
 
 const BUY = 'Buy';
-const isBuy = (order) => order.action === BUY;
+const SELL = 'Sell';
+const isBuy = (action) => action === BUY;
 
 class Matcher {
     constructor() {
@@ -10,8 +11,8 @@ class Matcher {
         this.tradesList = [];
     }
 
-    homeArray(order) { return isBuy(order) ? this.buyOrders : this.sellOrders; }
-    targetArray(order) { return isBuy(order) ? this.sellOrders : this.buyOrders; }
+    homeArray(order) { return isBuy(order.action) ? this.buyOrders : this.sellOrders; }
+    targetArray(order) { return isBuy(order.action) ? this.sellOrders : this.buyOrders; }
 
     match(order) {
         this.targetArray(order).length !== 0 ? this.trade(order) : this.homeArray(order).push(order) && this.homeArray(order).sort(this.sortOrders);
@@ -19,7 +20,7 @@ class Matcher {
 
     sortOrders(a, b) {
         if (a.price === b.price) { return a.timePlaced - b.timePlaced; }
-        return isBuy(a) ? b.price - a.price : a.price - b.price;
+        return isBuy(a.action) ? b.price - a.price : a.price - b.price;
     }
 
     trade(order) {
@@ -28,7 +29,7 @@ class Matcher {
                 const tradeOrder = this.targetArray(order)[i];
                 const targetPrice = tradeOrder.price;
                 let tradeQuantity = tradeOrder.quantity;
-                const bestMatch = isBuy(order) ? order.price >= targetPrice : order.price <= targetPrice;
+                const bestMatch = isBuy(order.action) ? order.price >= targetPrice : order.price <= targetPrice;
                 if (bestMatch) {
                     if (order.quantity > tradeQuantity) {
                         this.printTrade(order, tradeOrder);
@@ -52,9 +53,9 @@ class Matcher {
     }
 
     printTrade(a, b) {
-        const price = isBuy(a) ? b.price : a.price;
-        const buyer = isBuy(a) ? a.accountNumber : b.accountNumber;
-        const seller = isBuy(a) ? b.accountNumber : a.accountNumber;
+        const price = isBuy(a.action) ? b.price : a.price;
+        const buyer = isBuy(a.action) ? a.accountNumber : b.accountNumber;
+        const seller = isBuy(a.action) ? b.accountNumber : a.accountNumber;
         const quantity = Math.min(a.quantity, b.quantity);
         const currentTrade = {
             price,
@@ -79,123 +80,52 @@ class Matcher {
     getPrivateBuyOrders(user) { return this.buyOrders.filter(x => x.accountNumber === user); }
     getPrivateSellOrders(user) { return this.sellOrders.filter(x => x.accountNumber === user); }
 
+    getDepth(aggregation, action) {
+        const depthMap = isBuy(action) ? this.getBuysDepth(aggregation) : this.getSellsDepth(aggregation);
+        const depth = [];
+        depthMap.forEach((key, value) => {
+            depth.push({ price: value, quantity: key });
+        });
+        return isBuy(action) ? depth.reverse() : depth;
+    }
+
+    getBuysDepth(aggregation) {
+        let buysDepth = new Map();
+        const buyOrders = this.buyOrders;
+        for (let i = 0; i < buyOrders.length; i++) {
+            const reduceOrders = (aggregatedTotal, currentOrder, reducerIndex) => {
+                return reducerIndex <= i ?
+                    aggregatedTotal + Number(currentOrder.quantity) :
+                    aggregatedTotal;
+            };
+            const price = Number(buyOrders[i].price);
+            const mod = price % aggregation;
+            const bottomRange = price - mod;
+            const currentQuantity = buysDepth.get(bottomRange) || 0;
+            const newQuantity = currentQuantity + buyOrders.reduce(reduceOrders, -currentQuantity);
+            buysDepth.set(bottomRange, newQuantity);
+        }
+        return buysDepth;
+    }
+
+    getSellsDepth(aggregation) {
+        let sellsDepth = new Map();
+        const sellOrders = this.sellOrders;
+        for (let i = 0; i < sellOrders.length; i++) {
+            const price = Number(sellOrders[i].price);
+            const mod = price % aggregation;
+            const bottomRange = price - mod;
+            const currentQuantity = sellsDepth.get(bottomRange) || 0;
+            const reduceOrders = (aggregatedTotal, currentOrder, reducerIndex) => {
+                return reducerIndex <= i ?
+                    aggregatedTotal + Number(currentOrder.quantity) :
+                    aggregatedTotal;
+            };
+            const newQuantity = currentQuantity + sellOrders.reduce(reduceOrders, (-currentQuantity));
+            sellsDepth.set(bottomRange, newQuantity);
+        }
+        return sellsDepth;
+    }
 }
 
 module.exports = Matcher;
-
-// const Trade = require("./Trade");
-// const Order = require("./Order");
-
-//     printTrade(a, b) {
-//         const isBuy = a.action == "Buy";
-//         const price = isBuy ? b.price : a.price;
-//         const buyer = isBuy ? a.accountNumber : b.accountNumber;
-//         const seller = isBuy ? b.accountNumber : a.accountNumber;
-//         let currentTrade = new Trade(buyer, seller, Math.min(a.quantity, b.quantity), price, new Date(), (this.trades.length + 1));
-//         this.trades.unshift(currentTrade);
-//     }
-
-//     getAllOrders() {
-//         const orderbook = this.buy.concat(this.sell);
-//         orderbook.sort((a, b) => {
-//             return b.timePlaced - a.timePlaced;
-//         });
-//         return orderbook;
-//     }
-
-//     getPrivateOrders(num) {
-//         const privateOrderbook = [];
-//         const allOrders = this.getAllOrders();
-//         for (let i = 0; i <= allOrders.length - 1; i++) {
-//             if (allOrders[i].accountNumber == num) {
-//                 privateOrderbook.push(allOrders[i]);
-//             }
-//         }
-//         return privateOrderbook;
-//     }
-
-//     newAggregateBuys(range) {
-//         let aggregatedBuys = new Map();
-//         const buyOrders = this.buy;
-//         for (let i = 0; i < buyOrders.length; i++) {
-//             const reduceOrders = (aggregatedTotal, currentOrder, reducerIndex) => {
-//                 return reducerIndex <= i ?
-//                     aggregatedTotal + currentOrder.quantity :
-//                     aggregatedTotal;
-//             }
-//             const price = buyOrders[i].price;
-//             const mod = price % range;
-//             const bottomRange = price - mod;
-//             const currentQuantity = aggregatedBuys.get(bottomRange) || 0;
-//             const newQuantity = currentQuantity + buyOrders.reduce(reduceOrders, -currentQuantity);
-//             aggregatedBuys.set(bottomRange, newQuantity);
-//         }
-//         return aggregatedBuys;
-//     }
-
-//     reduceOrders(aggregatedTotal, currentOrder, reducerIndex, orderIndex) {
-//         if (reducerIndex <= orderIndex) {
-//             return aggregatedTotal + currentOrder.quantity;
-//         }
-//         return aggregatedTotal
-//     }
-
-
-//     newAggregateSells(range) {
-//         let aggregatedSells = new Map();
-//         const sellOrders = this.sell;
-//         for (let i = 0; i < sellOrders.length; i++) {
-//             const price = sellOrders[i].price;
-//             const mod = price % range;
-//             const bottomRange = price - mod;
-//             const currentQuantity = aggregatedSells.get(bottomRange) || 0;
-//             const reduceOrders = (aggregatedTotal, currentOrder, reducerIndex) => {
-//                 return reducerIndex <= i ?
-//                     aggregatedTotal + currentOrder.quantity :
-//                     aggregatedTotal;
-//             }
-//             const newQuantity = currentQuantity + sellOrders.reduce(reduceOrders, (-currentQuantity));
-//             aggregatedSells.set(bottomRange, newQuantity);
-//         }
-//         return aggregatedSells;
-//     }
-
-//     depthSells(range) {
-//         const sellsDepth = [];
-//         let map = this.newAggregateSells(range);
-//         map.forEach((value, key) => {
-//             sellsDepth.push({
-//                 price: Number(key),
-//                 quantity: value
-//             })
-//         })
-//         return sellsDepth;
-//     }
-
-//     depthBuys(range) {
-//         const buysDepth = [];
-//         let map = this.newAggregateBuys(range);
-//         map.forEach((value, key) => {
-//             buysDepth.push({
-//                 price: Number(key),
-//                 quantity: value
-//             })
-//         })
-//         return buysDepth;
-//     }
-
-
-
-//     getPrivateHistory(num) {
-//         const privateHistory = [];
-//         const allHistory = this.trades;
-
-//         for (let i = 0; i < allHistory.length; i++) {
-//             if (allHistory[i].buyer == num || allHistory[i].seller == num) {
-//                 privateHistory.unshift(allHistory[i]);
-//             }
-//         }
-//         return privateHistory;
-//     }
-// }
-// module.exports = Matcher;

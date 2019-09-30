@@ -6,14 +6,18 @@ export const FETCH_ORDERS_STARTED = 'FETCH_ORDERS_STARTED';
 export const FETCH_ORDERS_SUCCESS = 'FETCH_ORDERS_SUCCESS';
 export const FETCH_ORDERS_ERROR = 'FETCH_ORDERS_ERROR';
 
+export const UPDATE_AGGREGATION = 'UPDATE_AGGREGATION';
+export const UPDATE_DEPTH = 'UPDATE_DEPTH';
+export const UPDATE_DEPTH_ERROR = 'UPDATE_DEPTH_ERROR';
+
 export const addOrderStarted = order => ({
     type: ADD_ORDER_STARTED,
     order,
 });
 
-export const addOrderSuccess = order => ({
+export const addOrderSuccess = orders => ({
     type: ADD_ORDER_SUCCESS,
-    order,
+    orders,
 });
 
 export const addOrderFailure = error => ({
@@ -33,4 +37,19 @@ export const fetchOrdersSuccess = orders => ({
 export const fetchOrdersError = error => ({
     type: FETCH_ORDERS_ERROR,
     error
+});
+
+export const updateAggregation = aggregation => ({
+    type: UPDATE_AGGREGATION,
+    aggregation
+});
+
+export const updateDepth = depth => ({
+    type: UPDATE_DEPTH,
+    depth
+});
+
+export const updateDepthError = message => ({
+    type: UPDATE_DEPTH_ERROR,
+    message
 });

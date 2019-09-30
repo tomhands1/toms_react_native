@@ -19,7 +19,20 @@ const appRouter = (app) => {
 
         const newOrder = order(accountNumber, price, quantity, undefined, action);
         matcher.match(newOrder);
-        res.status(201).send(newOrder);
+        res.status(201).send(matcher.getAllOrders());
+    });
+
+    app.post('/login', function (req, res) {
+        const requestBody = req.body;
+        const { username, password } = requestBody;
+        console.log(requestBody);
+
+        if ((username || password) === undefined) {
+            res.status(400).send();
+        }
+
+        const userDetails = { accountNumber: '1', username: 'bob', balance: 205.00, preferredCurrency: '£' };
+        res.status(201).send(userDetails);
     });
 
     app.get('/orders', (req, res) => {
@@ -33,10 +46,12 @@ const appRouter = (app) => {
         res.status(200).send(matcher.tradesList);
     });
 
-    app.get('/privateorders', (req, res) => {
-        const user = req.query.user;
-        const privateOrderbook = matcher.getPrivateOrders(user);
-        res.status(200).send(privateOrderbook);
+    app.get('/depth', (req, res) => {
+        const aggregation = req.query.aggregation;
+        const buysDepth = matcher.getDepth(aggregation, 'Buy');
+        const sellsDepth = matcher.getDepth(aggregation, 'Sell');
+        const depth = { buysDepth, sellsDepth };
+        res.status(200).send(depth);
     });
 
 };
